@@ -1,20 +1,44 @@
 import { SplashScreen, Stack } from "expo-router";
-import './globals.css';
-import {useFonts} from 'expo-font';
+import "./globals.css";
+import { useFonts } from "expo-font";
 import { useEffect } from "react";
+import * as Sentry from "@sentry/react-native";
+import useAuthStore from "@/store/auth.store";
 
-export default function RootLayout() {
- const [fontsLoaded, error] = useFonts({
-    "QuickSand-Bold": require('../assets/fonts/Quicksand-Bold.ttf'),
-    "QuickSand-Medium": require('../assets/fonts/Quicksand-Medium.ttf'),
-    "QuickSand-Regular": require('../assets/fonts/Quicksand-Regular.ttf'),
-    "QuickSand-SemiBold": require('../assets/fonts/Quicksand-SemiBold.ttf'),
-    "QuickSand-Light": require('../assets/fonts/Quicksand-Light.ttf'),
+Sentry.init({
+  dsn: "https://f06abd4bdad61cfec09477337dea7b55@o4509853434707968.ingest.de.sentry.io/4509853440802896",
+
+  // Adds more context data to events (IP address, cookies, user, etc.)
+  // For more information, visit: https://docs.sentry.io/platforms/react-native/data-management/data-collected/
+  sendDefaultPii: true,
+
+  // uncomment the line below to enable Spotlight (https://spotlightjs.com)
+  // spotlight: __DEV__,
+});
+
+export default Sentry.wrap(function RootLayout() {
+  const { isLoading, fetchAuthenticatedUser } = useAuthStore();
+
+  const [fontsLoaded, error] = useFonts({
+    "QuickSand-Bold": require("../assets/fonts/Quicksand-Bold.ttf"),
+    "QuickSand-Medium": require("../assets/fonts/Quicksand-Medium.ttf"),
+    "QuickSand-Regular": require("../assets/fonts/Quicksand-Regular.ttf"),
+    "QuickSand-SemiBold": require("../assets/fonts/Quicksand-SemiBold.ttf"),
+    "QuickSand-Light": require("../assets/fonts/Quicksand-Light.ttf"),
   });
-useEffect(() => {
+  
+   useEffect(() => {
     if(error) throw error;
     if(fontsLoaded) SplashScreen.hideAsync();
   }, [fontsLoaded, error]);
 
- return <Stack screenOptions={{ headerShown: false }} />;
-}
+  useEffect(() => {
+    fetchAuthenticatedUser()
+  }, []);
+
+  if(!fontsLoaded || isLoading) return null;
+
+  return <Stack screenOptions={{ headerShown: false }} />;
+});
+
+Sentry.showFeedbackWidget();
